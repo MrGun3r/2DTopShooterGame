@@ -314,6 +314,7 @@ players.push(new Player(ctx))
 obstacles.push(new Obstacle(ctx,{width:200,height:200},{x:400,y:200}))
 obstacles.push(new Obstacle(ctx,{width:200,height:200},{x:1000,y:200}))
 obstacles.push(new Obstacle(ctx,{width:200,height:200},{x:700,y:1000}))
+obstacles.push(new Obstacle(ctx,{width:50,height:50},{x:500,y:600}))
 setInterval(()=>{
  if (enemies.length < enemyMax){
   if (Math.random() > 0.5){
@@ -375,6 +376,25 @@ function LineCollision(x1,y1,x2,y2,x3,y3,x4,y4){
   uB = ((x2-x1)*(y1-y3) - (y2-y1)*(x1-x3)) / ((y4-y3)*(x2-x1) - (x4-x3)*(y2-y1));
   if (uA >= 0 && uA <= 1 && uB >= 0 && uB <= 1){return true}
   else return false
+}
+function RectCollisionPt2(enemy,enemy2){
+  if(
+    enemy.position.x+enemy.size > enemy2.position.x &&(enemy2.position.x+enemy2.size) > enemy.position.x&&enemy.position.y+enemy.size > enemy2.position.y&&enemy2.position.y+enemy2.size > enemy.position.y && enemy != enemy2){
+    if (Math.min(Math.abs(enemy.position.x+enemy.size-enemy2.position.x),Math.abs(enemy.position.x-enemy2.position.x-enemy2.size))
+      <Math.min(Math.abs(enemy.position.y+enemy.size-enemy2.position.y),Math.abs(enemy.position.y-enemy2.position.y-enemy2.size) 
+    )){
+      if (Math.abs(enemy.position.x + enemy.size - enemy2.position.x)>Math.abs(enemy.position.x - enemy2.position.x - enemy2.size)){
+        enemy.position.x = enemy2.position.x + enemy2.size
+     }
+     else {enemy.position.x = enemy2.position.x - enemy.size}
+    }
+    else {
+      if (Math.abs(enemy.position.y + enemy.size - enemy2.position.y)>Math.abs(enemy.position.y - enemy2.position.y - enemy2.size)){
+        enemy.position.y = enemy2.position.y + enemy2.size
+       }
+       else {enemy.position.y = enemy2.position.y - enemy.size}
+    }}
+  
 }
 function Gameloop(){
     ctx.save()
@@ -457,29 +477,14 @@ function Gameloop(){
 
                 enemy.angle = rotateEnemy(player,enemy);
                 enemy.velocity = {x:Math.cos(enemy.angle)*3*enemy.knockback.x,y:Math.sin(enemy.angle)*3*enemy.knockback.x}
-            
+                RectCollisionPt2(player,enemy)
         })
     })
     
     enemies.forEach((enemy,index)=>{
       enemy.init(index)
       enemies.forEach((enemy2)=>{
-        if(
-          enemy.position.x+enemy.size > enemy2.position.x &&(enemy2.position.x+enemy2.size) > enemy.position.x&&enemy.position.y+enemy.size > enemy2.position.y&&enemy2.position.y+enemy2.size > enemy.position.y && enemy != enemy2){
-          if (Math.min(Math.abs(enemy.position.x+enemy.size-enemy2.position.x),Math.abs(enemy.position.x-enemy2.position.x-enemy2.size))
-            <Math.min(Math.abs(enemy.position.y+enemy.size-enemy2.position.y),Math.abs(enemy.position.y-enemy2.position.y-enemy2.size) 
-          )){
-            if (Math.abs(enemy.position.x + enemy.size - enemy2.position.x)>Math.abs(enemy.position.x - enemy2.position.x - enemy2.size)){
-              enemy.position.x = enemy2.position.x + enemy2.size
-           }
-           else {enemy.position.x = enemy2.position.x - enemy.size}
-          }
-          else {
-            if (Math.abs(enemy.position.y + enemy.size - enemy2.position.y)>Math.abs(enemy.position.y - enemy2.position.y - enemy2.size)){
-              enemy.position.y = enemy2.position.y + enemy2.size
-             }
-             else {enemy.position.y = enemy2.position.y - enemy.size}
-          }}
+        RectCollisionPt2(enemy,enemy2)
       })
       
     })
