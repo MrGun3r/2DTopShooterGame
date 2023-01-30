@@ -80,6 +80,10 @@ class Player{
     }
     this.firerate = 200
     this.special = {bool:true,reloadTime:0}
+    setInterval(()=>{
+      if((this.velocity.x != 0 || this.velocity.y!=0 )&& !GamePaused){
+      document.getElementById('step1').play()}
+    },200)
   }
   init(){
     this.draw()
@@ -144,12 +148,13 @@ class Player{
     }
     else {this.velocity.x = 0}
 
-    if (keys.space.pressed && this.dash.active){
+    if (keys.space.pressed && this.dash.active && Math.round(this.dash.reloadTime) == 0){
       this.dash.dashing = true
+      document.getElementById('dash').play()
       this.dash.active = false
       this.dash.reloadTime = 5
       var interval = setInterval(()=>{
-          if (this.dash.reloadTime>0 ){
+          if (Math.round(this.dash.reloadTime)>0 ){
             if(!GamePaused){
                this.dash.reloadTime -= 0.1}
           }
@@ -163,7 +168,7 @@ class Player{
       }, 5000);
     }
     
-    if (this.dash.reloadTime>0){
+    if (Math.round(this.dash.reloadTime)>0){
     document.getElementById("dashTimerText").innerHTML = Math.round(this.dash.reloadTime);
     document.querySelector(':root').style.setProperty('--dashTime',Math.round(this.dash.reloadTime*100)/100*8+'px')
     }
@@ -175,15 +180,20 @@ class Player{
         bullets.push(new Bullet(ctx,{x:this.position.x+this.size/2,y:this.position.y+this.size/2},{x:Math.cos(this.angle),y:Math.sin(this.angle)},this.angle))
         this.mag.loaded = false
         this.mag.bullet--
+        document.getElementById('shot').play()
         setTimeout(()=>{
             this.mag.loaded = true
         },this.firerate)
         keys.mouse1.pressed = false
     }
-    if (keys.mouse2.pressed && this.special.bool){
-    for (var i = 0 ; i <300;i+= 100){
+    if (keys.mouse1.pressed && this.mag.reloading){
+      document.getElementById('empty').play()
+    }
+    if (keys.mouse2.pressed && this.special.bool && Math.round(this.special.reloadTime) == 0){
+    for (var i = 0 ; i <600;i+= 200){
       setTimeout(()=>{
        for (var i = 0 ;i<24;i++){
+        document.getElementById('special').play()
         bullets.push(new Bullet(ctx,{x:this.position.x+this.size/2,y:this.position.y+this.size/2},{x:Math.cos(((i+this.angle)/12)*Math.PI),y:Math.sin(((i+this.angle)/12)*Math.PI)},((i+this.angle)/12)*Math.PI))
         }
       },i)
@@ -193,34 +203,36 @@ class Player{
     this.special.bool = false
     this.special.reloadTime = 10
     var interval = setInterval(()=>{
-      if (this.special.reloadTime > 0){
+      if (Math.round(this.special.reloadTime) > 0){
         if(!GamePaused){
-        this.special.reloadTime -= 0.1}
+        this.special.reloadTime -= 0.1
+        
+        document.getElementById("specialTimerText").innerHTML = Math.round(this.special.reloadTime);
+        document.querySelector(':root').style.setProperty('--specialTime',Math.round(this.special.reloadTime*100)/100*4+'px')}
       }
-      else {clearInterval(interval)}
+      else {clearInterval(interval);document.getElementById('specialTimerText').innerHTML = ''
+        document.querySelector(':root').style.setProperty('--specialTime',0)}
+      
     },100)
     setTimeout(()=>{
       this.special.bool = true
     },10000)
   }
   
-  if (this.special.reloadTime>0){
-    document.getElementById("specialTimerText").innerHTML = Math.round(this.special.reloadTime);
-    document.querySelector(':root').style.setProperty('--specialTime',Math.round(this.special.reloadTime*100)/100*4+'px')
-  }
-  else {document.getElementById('specialTimerText').innerHTML = ''
-        document.querySelector(':root').style.setProperty('--specialTime',0)}
-    if ((keys.R.pressed || this.mag.bullet <= 0) && this.mag.bullet < 10 && !this.mag.reloading){
+
+    if ((keys.R.pressed || this.mag.bullet <= 0) && this.mag.bullet < 10 && !this.mag.reloading && Math.round(this.mag.reloadTime*100)/100 == 0){
       this.mag.reloading = true
       this.mag.reloadTime = 1.5
       keys.R.pressed = false
       var interval = setInterval(()=>{
-            if (this.mag.reloadTime > 0){
               if (!GamePaused){
               document.getElementById('reloading').innerHTML = Math.round(this.mag.reloadTime*100)/100
-              this.mag.reloadTime -= 0.1}
-            }
-            else {clearInterval(interval);document.getElementById('reloading').innerHTML = ''}
+              this.mag.reloadTime -= 0.1
+              if (Math.round(this.mag.reloadTime*100)/100 <= 0){
+                clearInterval(interval)
+                document.getElementById('reloading').innerHTML = '';this.mag.reloadTime = 0;
+              }
+            } 
       },100)
       setTimeout(()=>{
         this.mag.bullet = 10
@@ -232,7 +244,7 @@ class Player{
     }
     this.position.x += this.velocity.x + this.knockback.x
     this.position.y += this.velocity.y + this.knockback.y
-
+    
     if(this.position.x<0){
         this.position.x = 0
       }
@@ -493,14 +505,17 @@ function Gameloop(){
       obstacles.forEach((obstacle)=>{
         if (PointRectCollision(bullet,obstacle)){
           bullets.splice(index,1)
+          document.getElementById('bullethit').play()
         }
       })
       enemies.forEach((enemy,index2)=>{
         if (bullet.position.x > enemy.position.x &&bullet.position.x < enemy.position.x + enemy.size &&
           bullet.position.y > enemy.position.y &&bullet.position.y < enemy.position.y + enemy.size){
             bullets.splice(index,1)
+            document.getElementById('bullethit').play()
             enemy.healthbar = true
             enemy.health -= 5
+            document.getElementById('enemyhit').play()
             enemy.knockback.x *= -1
             enemy.knockback.y *= -1
             if (enemy.health<=0){
@@ -508,6 +523,7 @@ function Gameloop(){
                 particles.push(new Particle(ctx,{x:enemy.position.x,y:enemy.position.y},{x:(Math.random()-0.5)*3,y:(Math.random()-0.5)*3}))
               }
               enemies.splice(index2,1)
+              document.getElementById('enemydeath').play()
             }
             
        }})
@@ -528,6 +544,7 @@ function Gameloop(){
           if (player.position.x+player.size > enemy.position.x && enemy.position.x+enemy.size > player.position.x &&player.position.y+player.size > enemy.position.y
             && enemy.position.y+enemy.size > player.position.y && !player.invisiblity.bool){
                 player.health -= 5
+                document.getElementById('playerhit').play()
                 player.healthbar = true
                 player.knockback.x = enemy.velocity.x*10
                 player.knockback.y = enemy.velocity.y*10
@@ -552,6 +569,7 @@ function Gameloop(){
                   document.querySelector(':root').style.setProperty('--color','#fa0f02')
                   document.querySelector(':root').style.setProperty('--hpbar',0+'px')
                   players.splice(index,1)
+                  document.getElementById('playerdeath').play()
                   for (var i=0;i<8;i++){
                 particles.push(new Particle(ctx,{x:player.position.x,y:player.position.y},{x:(Math.random()-0.5)*3,y:(Math.random()-0.5)*3}))
                 }
@@ -619,18 +637,21 @@ addEventListener('keydown',({keyCode})=>{
       GamePaused = true
       var i = 0
       var interval = setInterval(()=>{
+      document.getElementById('menu').play()
       if (i < 5){
         i++
       document.querySelector(':root').style.setProperty('--pauseBlur',i+'px')}
-      else {clearInterval(interval);document.getElementById('pauseMenu').style.display = 'block'}},10)
+      else {clearInterval(interval);document.getElementById('pauseMenu').style.display = 'block';}},10)
     }
   else {GamePaused=false;Gameloop();
 ;var i = 5
+document.getElementById('menu').play()
 var interval = setInterval(()=>{
+  
   if (i > 0){
     i--
   document.querySelector(':root').style.setProperty('--pauseBlur',i+'px')}
-  else {clearInterval(interval)};document.getElementById('pauseMenu').style.display = 'none'},10)}}
+  else {clearInterval(interval)};document.getElementById('pauseMenu').style.display = 'none';},10)}}
   
 })
 addEventListener('keyup',({keyCode})=>{
