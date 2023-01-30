@@ -5,7 +5,19 @@
 }
 :root{
     --color : '#44eb44';
-    --hpbar : 20px
+    --hpbar : 20px;
+
+    --specialTime : 0px;
+    --dashTime:0px;
+    --pauseBlur:0px;
+    
+}
+#canvas {
+    height: 100vh;
+    width: 100vw;
+    display:block;
+    filter: blur(var(--pauseBlur));
+    
 }
 html,body{
     -webkit-user-select: none;      
@@ -13,29 +25,52 @@ html,body{
     -ms-user-select: none; 
     user-select: none; 
     font-family: 'Unbounded', cursive;
+    
+}
+#pauseMenu{
+    position:absolute;
+    background-color: rgba(240, 248, 255, 0.411);
+    border-radius: 5px;
+    top:0px;
+    display:none;
+    outline: 2px solid rgba(0, 0, 0, 0.432);
+    margin-left:15%;
+    margin-top:15%;
+    height:50%;
+    width:65%;
+}
+#pause{
+    font-size: 50px;
+    text-align: center;
 }
 #timerDiv{
     position:absolute;
     left :20px;
     top:10px;
-    font-size:40px
-
+    font-size:40px;
+    filter: blur(var(--pauseBlur));
+     
 }
 #reloading {
     position:absolute;
     top:30px;
-    right:10px
+    right:10px;
+    filter: blur(var(--pauseBlur));
 }
 #mag{
     font-size: 40px;
     position:absolute;
     bottom:1px;
-    left:1px
+    left:1px;
+    text-shadow:2px 2px 1px #05050525;
+    
 }
 #mag2{
     position:absolute;
     bottom:1px;
     right:1px;
+    text-shadow:2px 2px 1px #05050525;
+    
 }
 #magDiv{
     position:absolute;
@@ -43,16 +78,19 @@ html,body{
     width:100px;
     right: 5px;
     bottom: 5px;
+    filter: blur(var(--pauseBlur));
 }
 #HealthDiv{
     position:absolute;
     color: var(--color);
     font-size: 40px;
     left: 20px;
-    bottom:20px
+    bottom:20px;
+    filter: blur(var(--pauseBlur));
 }
 #health{
-    text-shadow:2px 2px 1px #05050525
+    text-shadow:2px 2px 1px #05050525;
+    
 }
 #hpbar{
     position:absolute;
@@ -63,6 +101,7 @@ html,body{
     outline-width: 1px;
     outline-style: solid;
     outline-color: #000;
+    filter: blur(var(--pauseBlur));
 }
 #hpbarFiller{
     position:absolute;
@@ -70,11 +109,66 @@ html,body{
     left:25px;
     height:7px;
     width:var(--hpbar);
-    background-color: var(--color);
+    background-color: var(--color);;
+    filter: blur(var(--pauseBlur));
 }
-#canvas {
-    width:100%;
-    height:100%;
-    display:block;
-    
+#specials{
+    position:absolute;
+    right: 120px;
+    bottom:10px;
+    width:100px;
+    height:50px;
+    filter: blur(var(--pauseBlur));
+}
+#dashimg{
+    border-radius: 5px;
+    outline: 2px solid black;
+    position:absolute;
+    left:10px;
+    top:5px;
+    height:40px;
+    width:40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden
+}
+#specialimg{
+    border-radius: 5px;
+    outline: 2px solid black;
+    position:absolute;
+    right: 5px;
+    top:5px;
+    height:40px;
+    width:40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden
+}
+#specialTimer{
+    position: inherit;
+    font-size: 15px;
+    background-color: rgba(128, 128, 128, 0.5);
+    width: 100%;
+    bottom:0px;
+    height:var(--specialTime)
+}
+#dashTimer{
+    position: inherit;
+    font-size: 15px;
+    background-color: rgba(128, 128, 128, 0.5);
+    width: 100%;
+    bottom:0px;
+    height:var(--dashTime)
+}
+#dashTimerText{
+    position: absolute;
+    left: 10px;
+    bottom:10px;
+}
+#specialTimerText{
+    position: absolute;
+    left: 10px;
+    bottom:10px;
 }

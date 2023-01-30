@@ -3,12 +3,15 @@ var ctx = canvas.getContext('2d')
 
 canvas.width  = screen.width
 canvas.height = screen.height
+document.querySelector(':root').style.setProperty('--width',canvas.width)
+document.querySelector(':root').style.setProperty('--height',canvas.height)
+var GamePaused = false
 const players = []
 const enemies = []
 const obstacles = []
 const bullets = []
 const particles = []
-const keys = {up:{pressed:false},down:{pressed:false},left:{pressed:false},right:{pressed:false},shift:{pressed:false},mouse1:{pressed:false},R:{pressed:false}}
+const keys = {up:{pressed:false},down:{pressed:false},left:{pressed:false},right:{pressed:false},shift:{pressed:false},mouse1:{pressed:false},R:{pressed:false},space:{pressed:false},mouse2:{pressed:false},escape:{pressed:false}}
 const camera = {
     x:0,
     y:0,
@@ -37,13 +40,14 @@ obstacleImg.src = 'obstacle.png'
 var enemyimg = new Image()
 enemyimg.src = 'enemy.png'
 setInterval(()=>{
+  if(!GamePaused){
   time.sec += 1
   if (time.sec >= 60){
     time.min += 1
     time.sec = 0
   }
   document.getElementById('timesec').innerHTML = String(time.sec).padStart(2, '0')
-  document.getElementById('timemin').innerHTML = String(time.min).padStart(2, '0')
+  document.getElementById('timemin').innerHTML = String(time.min).padStart(2, '0')}
 },1000)
 class Player{
   constructor(ctx){
@@ -56,6 +60,7 @@ class Player{
        x:0,
        y:0
     }
+    this.dash = {dashing:false,active:true,trails:[],reloadTime:0}
     this.speed = Math.round(280*(1/fps))
     this.size = 30
     this.rect = canvas.getBoundingClientRect()
@@ -74,7 +79,7 @@ class Player{
       reloadTime:0
     }
     this.firerate = 200
-    
+    this.special = {bool:true,reloadTime:0}
   }
   init(){
     this.draw()
@@ -87,7 +92,19 @@ class Player{
     this.ctx.rotate(this.angle)
     this.ctx.translate(-this.position.x-this.size/2,-this.position.y-this.size/2)
     this.ctx.drawImage(playerimg,this.position.x,this.position.y,this.size,this.size)
-    this.ctx.restore()}
+    this.ctx.restore()
+    this.dash.trails.forEach((trail,index)=>{
+      if (trail.opacity>0){
+      this.ctx.save()
+      this.ctx.globalAlpha = trail.opacity
+      this.ctx.translate(trail.x+this.size/2,trail.y+this.size/2)
+      this.ctx.rotate(trail.angle)
+      this.ctx.translate(-trail.x-this.size/2,-trail.y-this.size/2)
+      this.ctx.drawImage(playerimg,trail.x,trail.y,this.size,this.size)
+      trail.opacity -= 0.1
+      this.ctx.restore()}
+      else{this.dash.trails.splice(index,1)}
+    })}
     if (this.healthbar){
       this.ctx.beginPath()
       this.ctx.rect(this.position.x,this.position.y-20,20,7)
@@ -96,8 +113,14 @@ class Player{
       this.ctx.fillRect(this.position.x,this.position.y-20,this.health,7)
       this.ctx.fillStyle = 'black'
     }
+   
   }
   update(){
+    if (this.dash.dashing){
+      this.speed = Math.round(280*(1/fps)) * 2
+      this.dash.trails.push({x:this.position.x,y:this.position.y,opacity:1,angle:this.angle})
+    }
+    else {this.speed = Math.round(200*(1/fps));}
     if (keys.up.pressed){
         this.velocity.y = -this.speed
         if (camera.y > 0 && this.position.y-this.size/2<=camera.y+canvas.height/2) {
@@ -120,6 +143,34 @@ class Player{
             camera.x += this.speed}
     }
     else {this.velocity.x = 0}
+
+    if (keys.space.pressed && this.dash.active){
+      this.dash.dashing = true
+      this.dash.active = false
+      this.dash.reloadTime = 5
+      var interval = setInterval(()=>{
+          if (this.dash.reloadTime>0 ){
+            if(!GamePaused){
+               this.dash.reloadTime -= 0.1}
+          }
+          else {clearInterval(interval);}
+      },100)
+      setTimeout(()=>{
+        this.dash.dashing = false
+      },200)
+      setTimeout(() => {
+        this.dash.active = true
+      }, 5000);
+    }
+    
+    if (this.dash.reloadTime>0){
+    document.getElementById("dashTimerText").innerHTML = Math.round(this.dash.reloadTime);
+    document.querySelector(':root').style.setProperty('--dashTime',Math.round(this.dash.reloadTime*100)/100*8+'px')
+    }
+    else {
+      document.getElementById('dashTimerText').innerHTML = ''
+      document.querySelector(':root').style.setProperty('--dashTime',0)
+    }
     if (keys.mouse1.pressed && this.mag.bullet > 0 && this.mag.loaded && !this.mag.reloading){
         bullets.push(new Bullet(ctx,{x:this.position.x+this.size/2,y:this.position.y+this.size/2},{x:Math.cos(this.angle),y:Math.sin(this.angle)},this.angle))
         this.mag.loaded = false
@@ -129,14 +180,45 @@ class Player{
         },this.firerate)
         keys.mouse1.pressed = false
     }
+    if (keys.mouse2.pressed && this.special.bool){
+    for (var i = 0 ; i <300;i+= 100){
+      setTimeout(()=>{
+       for (var i = 0 ;i<24;i++){
+        bullets.push(new Bullet(ctx,{x:this.position.x+this.size/2,y:this.position.y+this.size/2},{x:Math.cos(((i+this.angle)/12)*Math.PI),y:Math.sin(((i+this.angle)/12)*Math.PI)},((i+this.angle)/12)*Math.PI))
+        }
+      },i)
+      
+    }
+    keys.mouse2.pressed = false
+    this.special.bool = false
+    this.special.reloadTime = 10
+    var interval = setInterval(()=>{
+      if (this.special.reloadTime > 0){
+        if(!GamePaused){
+        this.special.reloadTime -= 0.1}
+      }
+      else {clearInterval(interval)}
+    },100)
+    setTimeout(()=>{
+      this.special.bool = true
+    },10000)
+  }
+  
+  if (this.special.reloadTime>0){
+    document.getElementById("specialTimerText").innerHTML = Math.round(this.special.reloadTime);
+    document.querySelector(':root').style.setProperty('--specialTime',Math.round(this.special.reloadTime*100)/100*4+'px')
+  }
+  else {document.getElementById('specialTimerText').innerHTML = ''
+        document.querySelector(':root').style.setProperty('--specialTime',0)}
     if ((keys.R.pressed || this.mag.bullet <= 0) && this.mag.bullet < 10 && !this.mag.reloading){
       this.mag.reloading = true
       this.mag.reloadTime = 1.5
       keys.R.pressed = false
       var interval = setInterval(()=>{
             if (this.mag.reloadTime > 0){
+              if (!GamePaused){
               document.getElementById('reloading').innerHTML = Math.round(this.mag.reloadTime*100)/100
-              this.mag.reloadTime -= 0.1
+              this.mag.reloadTime -= 0.1}
             }
             else {clearInterval(interval);document.getElementById('reloading').innerHTML = ''}
       },100)
@@ -316,13 +398,14 @@ obstacles.push(new Obstacle(ctx,{width:200,height:200},{x:1000,y:200}))
 obstacles.push(new Obstacle(ctx,{width:200,height:200},{x:700,y:1000}))
 obstacles.push(new Obstacle(ctx,{width:50,height:50},{x:500,y:600}))
 setInterval(()=>{
- if (enemies.length < enemyMax){
+ if (enemies.length < enemyMax && !GamePaused){
   if (Math.random() > 0.5){
   enemies.push(new Enemy(ctx,{x:Math.random()<0.5?-10:canvas.width+worldBorder.maxX,y:Math.random()*canvas.height+worldBorder.maxY}))}
   else {enemies.push(new Enemy(ctx,{x:Math.random()*canvas.width+worldBorder.maxX,y:Math.random()<0.5?canvas.height+worldBorder.maxY:-10}))}
 }},1000)
 setInterval(()=>{
-   enemyMax++
+  if (!GamePaused){
+   enemyMax++}
 },10000)
 function timer(enemy){
   setTimeout(()=>{
@@ -458,9 +541,10 @@ function Gameloop(){
                   player.invisiblity.bool = false
                 },2000)
                 var interval = setInterval(()=>{
+                if(!GamePaused){
                   if(player.invisiblity.bool){
                   player.invisiblity.blink = !player.invisiblity.blink}
-                  else {clearInterval(interval),player.invisiblity.blink = false}
+                  else {clearInterval(interval),player.invisiblity.blink = false}}
                 },100)
 
                 if (player.health <= 0){
@@ -501,16 +585,18 @@ function Gameloop(){
 
     frameCount++
     var elapsedTime = performance.now() - startTime;
-    if (elapsedTime > 500) {
+    if (elapsedTime > 100) {
       fps = Math.round(frameCount / (elapsedTime / 1000))
       frameCount = 0;
       startTime = performance.now();
     }
     ctx.restore()
-    requestAnimationFrame(Gameloop)
+    if (!GamePaused){
+    requestAnimationFrame(Gameloop)}
 }
 
-Gameloop()
+ Gameloop()
+
 addEventListener('keydown',({keyCode})=>{
     if (keyCode == 87) // W
     {keys.up.pressed = true}
@@ -526,6 +612,26 @@ addEventListener('keydown',({keyCode})=>{
     if (keyCode == 82){//R
       keys.R.pressed = true
     }
+    if (keyCode == 32) // Space
+    {keys.space.pressed = true}
+    if (keyCode == 27) // Escape
+    {if (!GamePaused){
+      GamePaused = true
+      var i = 0
+      var interval = setInterval(()=>{
+      if (i < 5){
+        i++
+      document.querySelector(':root').style.setProperty('--pauseBlur',i+'px')}
+      else {clearInterval(interval);document.getElementById('pauseMenu').style.display = 'block'}},10)
+    }
+  else {GamePaused=false;Gameloop();
+;var i = 5
+var interval = setInterval(()=>{
+  if (i > 0){
+    i--
+  document.querySelector(':root').style.setProperty('--pauseBlur',i+'px')}
+  else {clearInterval(interval)};document.getElementById('pauseMenu').style.display = 'none'},10)}}
+  
 })
 addEventListener('keyup',({keyCode})=>{
     if (keyCode == 87) // W
@@ -542,15 +648,26 @@ addEventListener('keyup',({keyCode})=>{
     if (keyCode == 82){//R
         keys.R.pressed = false
       }
-    
+    if (keyCode == 32) // Space
+    {keys.space.pressed = false}  
 })
 addEventListener('mousemove',(event)=>{
     players[0].event = event
   })
 addEventListener('mousedown',(event)=>{
-  keys.mouse1.pressed = true
-}
+  if (event.button == 0){
+  keys.mouse1.pressed = true}
+  if (event.button == 2){
+    keys.mouse2.pressed = true
+    }}
+
 )
 addEventListener('mouseup',(event)=>{
-  keys.mouse1.pressed = false
+  if (event.button == 0){
+    keys.mouse1.pressed = false
+  }
+  if (event.button == 2){
+    keys.mouse2.pressed = false   
+  }
 })
+addEventListener("contextmenu", e => e.preventDefault());
