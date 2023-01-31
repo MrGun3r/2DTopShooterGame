@@ -27,32 +27,133 @@ html,body{
     font-family: 'Unbounded', cursive;
     
 }
+#resume{
+    border:none;
+    text-align: center;
+    font-family: 'Unbounded', cursive;
+    font-size: 20px;
+    background-color: transparent;
+    width: 100%;
+    
+    
+}
+#settings{
+    border:none;
+    text-align: center;
+    font-family: 'Unbounded', cursive;
+    font-size: 20px;
+    background-color: transparent;
+    width: 100%;
+}
+#exit:hover,#restart:hover,#settings:hover,#resume:hover{
+    background-color:#c206066b;
+}
+#exit{
+    border:none;
+    text-align: center;
+    font-family: 'Unbounded', cursive;
+    font-size: 20px;
+    background-color: transparent;
+    width: 100%; }
+#restart{
+    border:none;
+    text-align: center;
+    font-family: 'Unbounded', cursive;
+    font-size: 20px;
+    background-color: transparent;
+    width: 100%;    
+}
+#pauseOptions{
+    position: absolute;
+    top:0px;
+    display:flex;
+    align-items:40px;
+    flex-direction: column;
+    width:100%;
+    height:100%;
+    justify-content: center;
+}
+#settingsMenu{
+
+    position:absolute;
+    background-color: rgba(240, 248, 255, 0.411);
+    border-radius: 5px;
+    top:0px;
+    display:none;
+    outline: 2px solid rgba(0, 0, 0, 0.432);
+    margin-left:15%;
+    margin-top:15%;
+    height:50%;
+    width:65%;
+    
+}
+#settingsOptions{
+    
+    
+    width:100%;
+    font-size: 20px;
+    height:100%;
+    justify-content: center;
+}
+#volumeSlider {
+    -webkit-appearance: none;
+    border-radius: 10px;
+    height: 20px;
+    background: #282828;
+    outline: none;
+    opacity: 0.7;
+    width:70%;
+    -webkit-transition: .2s;
+    transition: opacity .2s;
+  }
+#soundDiv{
+    display:flex;
+    flex:1;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    
+}
+#settingsText{
+    font-size: 50px;
+    text-align: center;
+}
+#fps{
+    display:flex;
+    flex:1;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+}
+
 #startmenu{
     border:none;
     position:absolute;
-    
+    display:flex;
+    justify-content: center;
+    align-items: center;
     width: 100%;
     height: 100%;
     left:0px;
     top:0px
 }
 #start{
-    
     background-color: transparent;
-    position:absolute;
     font-size: 40px;
-    top:25%;
-    width:50%;
     text-align: start;
     left:20px;
     font-family: 'Unbounded', cursive;
     border:none;
 }
+#startButtons{
+    width:fit-content;
+    flex:2 2 auto;
+}
 #title{
-    position:absolute;
-    top:50px;
-    left:20px;
-    
+    flex:2 2 auto;
+    display:flex;
+    justify-content: center;
+    align-items: center;
     font-size: 60px;
     font-family: 'Unbounded', cursive;
     border:none;
@@ -128,6 +229,12 @@ html,body{
     font-size:40px;
     filter: blur(var(--pauseBlur));
      
+}
+#fpsCount{
+    position:absolute;
+    right:0px;
+    top:0px;
+    font-size:15px
 }
 #reloading {
     position:absolute;

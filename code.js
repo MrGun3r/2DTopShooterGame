@@ -5,9 +5,13 @@ canvas.width  = screen.width
 canvas.height = screen.height
 document.querySelector(':root').style.setProperty('--width',canvas.width)
 document.querySelector(':root').style.setProperty('--height',canvas.height)
+var volumeSound = 50
+document.getElementById('soundVolume').innerHTML = volumeSound +'%'
+var showFPS = false
 var GamePaused = false
 var GameEnded = false
 var Playing = false
+var Restarting = false
 const players = []
 const enemies = []
 const obstacles = []
@@ -47,7 +51,7 @@ function start(){
   document.getElementById('timesec').innerHTML = '00'
   document.getElementById('timemin').innerHTML = '00'
   var timeInterval = setInterval(()=>{
-    if(!GameEnded){
+    if(!GameEnded && !Restarting){
     if(!GamePaused && Playing){
     time.sec += 1
     if (time.sec >= 60){
@@ -57,17 +61,17 @@ function start(){
     document.getElementById('timesec').innerHTML = String(time.sec).padStart(2, '0')
     document.getElementById('timemin').innerHTML = String(time.min).padStart(2, '0')
     document.getElementById('timeSurvived').innerHTML =String(time.min).padStart(2, '0')+':'+String(time.sec).padStart(2, '0')}}
-    else{clearInterval(timeInterval)}
+    else{clearInterval(timeInterval);Restarting = false}
   },1000)
   players.length = 0
   bullets.length = 0
   enemies.length = 0
   obstacles.length = 0
   enemyMax = 4
+  GameEnded = false
   time.sec = 0
   time.min = 0
   players.push(new Player(ctx))
-  GameEnded = false
   document.getElementById('gameoverdiv').style.display = 'none'
   var i = 5
   var interval = setInterval(()=>{
@@ -87,6 +91,48 @@ function start(){
   document.getElementById('HealthDiv').style.display = 'block'
   document.getElementById('hpbarFiller').style.display = 'block'
   Gameloop()
+}
+function resume(){
+  GamePaused=false;
+  Gameloop();
+;var i = 5
+document.getElementById('menu').play()
+var interval = setInterval(()=>{
+  
+  if (i > 0){
+    i--
+  document.querySelector(':root').style.setProperty('--pauseBlur',i+'px')}
+  else {clearInterval(interval)};document.getElementById('pauseMenu').style.display = 'none';},10)
+}
+function restart(){
+  GameEnded = true
+  GamePaused = false
+  Playing = false
+  Restarting = true
+  document.getElementById('pauseMenu').style.display = 'none'
+  start()
+}
+function settings(){
+  document.getElementById('pauseMenu').style.display = 'none'
+  document.getElementById('settingsMenu').style.display = 'block'
+}
+function volumeChange(){
+  volumeSound = document.getElementById('volumeSlider').value
+  document.getElementById('soundVolume').innerHTML = volumeSound +'%'
+  document.getElementById('shot').volume = volumeSound/100
+  document.getElementById('playerhit').volume = volumeSound/100
+  document.getElementById('playerdeath').volume = volumeSound/100
+  document.getElementById('startGame').volume = volumeSound/100
+  document.getElementById('bullethit').volume = volumeSound/100
+  document.getElementById('enemyhit').volume = volumeSound/100
+  document.getElementById('dash').volume = volumeSound/100
+  document.getElementById('special').volume = volumeSound/100
+  document.getElementById('menu').volume = volumeSound/100
+  document.getElementById('step1').volume = volumeSound/100
+  document.getElementById('reloadingSound').volume = volumeSound/100
+  document.getElementById('playerhit').volume = volumeSound/100
+  document.getElementById('empty').volume = volumeSound/100
+  document.getElementById('reloaded').volume = volumeSound/100
 }
 class Player{
   constructor(ctx){
@@ -120,8 +166,8 @@ class Player{
     this.firerate = 200
     this.special = {bool:true,reloadTime:0}
     var interval = setInterval(()=>{
-      if((this.velocity.x != 0 || this.velocity.y!=0 ) && !GamePaused){
-         if(!GameEnded){
+      if((this.velocity.x != 0 || this.velocity.y!=0 ) && !GamePaused && !Restarting){
+         if(!GameEnded ){
       document.getElementById('step1').play()}
     else (clearInterval(interval))}
     },200)
@@ -132,24 +178,24 @@ class Player{
   }
   draw(){
     if (!this.invisiblity.blink){
+      this.dash.trails.forEach((trail,index)=>{
+        if (trail.opacity>0){
+        this.ctx.save()
+        this.ctx.globalAlpha = trail.opacity
+        this.ctx.translate(trail.x+this.size/2,trail.y+this.size/2)
+        this.ctx.rotate(trail.angle)
+        this.ctx.translate(-trail.x-this.size/2,-trail.y-this.size/2)
+        this.ctx.drawImage(playerimg,trail.x,trail.y,this.size,this.size)
+        trail.opacity -= 0.1
+        this.ctx.restore()}
+        else{this.dash.trails.splice(index,1)}
+      })
       this.ctx.save()
     this.ctx.translate(this.position.x+this.size/2,this.position.y+this.size/2)
     this.ctx.rotate(this.angle)
     this.ctx.translate(-this.position.x-this.size/2,-this.position.y-this.size/2)
     this.ctx.drawImage(playerimg,this.position.x,this.position.y,this.size,this.size)
-    this.ctx.restore()
-    this.dash.trails.forEach((trail,index)=>{
-      if (trail.opacity>0){
-      this.ctx.save()
-      this.ctx.globalAlpha = trail.opacity
-      this.ctx.translate(trail.x+this.size/2,trail.y+this.size/2)
-      this.ctx.rotate(trail.angle)
-      this.ctx.translate(-trail.x-this.size/2,-trail.y-this.size/2)
-      this.ctx.drawImage(playerimg,trail.x,trail.y,this.size,this.size)
-      trail.opacity -= 0.1
-      this.ctx.restore()}
-      else{this.dash.trails.splice(index,1)}
-    })}
+    this.ctx.restore()}
     if (this.healthbar){
       this.ctx.beginPath()
       this.ctx.rect(this.position.x,this.position.y-20,20,7)
@@ -266,6 +312,7 @@ class Player{
     if ((keys.R.pressed || this.mag.bullet <= 0) && this.mag.bullet < 10 && !this.mag.reloading && Math.round(this.mag.reloadTime*100)/100 == 0){
       this.mag.reloading = true
       this.mag.reloadTime = 1.5
+      document.getElementById('reloadingSound').play()
       keys.R.pressed = false
       var interval = setInterval(()=>{
               if (!GamePaused && !GameEnded){
@@ -274,13 +321,12 @@ class Player{
               if (Math.round(this.mag.reloadTime*100)/100 <= 0){
                 clearInterval(interval)
                 document.getElementById('reloading').innerHTML = '';this.mag.reloadTime = 0;
+                this.mag.bullet = 10
+                document.getElementById('reloaded').play()
+                this.mag.reloading = false
               }
             } 
       },100)
-      setTimeout(()=>{
-        this.mag.bullet = 10
-        this.mag.reloading = false
-      },1500)
     }
     if (this.mag.bullet <= 3 && !this.mag.reloading){
       document.getElementById('reloading').innerHTML = '[R] Reload'
@@ -537,7 +583,8 @@ function RectCollisionPt2(enemy,enemy2){
 function Gameloop(){
     ctx.save()
     ctx.translate(-camera.x-camera.mouse.x,-camera.y-camera.mouse.y)
-
+    if(document.getElementById('showFPS').checked){document.getElementById('fpsCount').innerHTML = 'FPS :'+fps}
+    else {document.getElementById('fpsCount').innerHTML = ''}
     var rect = canvas.getBoundingClientRect()
     for (var i = 0;i<=canvas.width+worldBorder.maxX+camera.x;i+=127){
      for (var j = 0;j<=canvas.height+worldBorder.maxY+camera.y;j+=127){
@@ -683,7 +730,7 @@ addEventListener('keydown',({keyCode})=>{
     {keys.space.pressed = true}
     if (keyCode == 27) // Escape
     {if (!GamePaused){
-    if(!GameEnded && players.length > 0){
+    if(!GameEnded && players.length > 0 && Playing){
       GamePaused = true
       var i = 0
       var interval = setInterval(()=>{
@@ -697,11 +744,12 @@ addEventListener('keydown',({keyCode})=>{
 ;var i = 5
 document.getElementById('menu').play()
 var interval = setInterval(()=>{
-  
+  if(document.getElementById('settingsMenu').style.display == 'block'){document.getElementById('settingsMenu').style.display = 'none'}
+  else{
   if (i > 0){
-    i--
-  document.querySelector(':root').style.setProperty('--pauseBlur',i+'px')}
-  else {clearInterval(interval)};document.getElementById('pauseMenu').style.display = 'none';},10)}}
+    i--;document.querySelector(':root').style.setProperty('--pauseBlur',i+'px')}
+  else {clearInterval(interval)}}
+  document.getElementById('pauseMenu').style.display = 'none';},10)}}
   
 })
 addEventListener('keyup',({keyCode})=>{

@@ -9,9 +9,29 @@
 </head>
 <body>
     <canvas id='canvas'></canvas>
-    <div id="startmenu"><span id="title">Title screen</span><br>
-        <button id="start" onclick="start()">Start</button></div>
-    <div id="pauseMenu"><p id="pause">Pause</p></div>
+    <div id="startmenu"><span id="title">Title screen</span>
+        <div id="startButtons">
+        <button id="start" onclick="start()">Start</button><br>
+        <button id="start" onclick="start()">Settings</button><br>
+        <button id="start" onclick="start()">Exit</button></div></div>
+    <div id="pauseMenu">
+        <p id="pause">Pause</p><br>
+    <div id="pauseOptions">
+        <button id="resume" onclick="resume()">Resume</button>
+        <button id="restart" onclick="restart()">Restart</button>
+        <button id="settings" onclick="settings()">Settings</button>
+        <button id="exit">Menu</button></div>
+    </div>
+    <div id="settingsMenu">
+        <p id="settingsText">Settings</p><br>
+    <div id="settingsOptions">
+        <div id="soundDiv">
+        <span>Sound  </span><input type="range" min="0" max="100" value="50" id="volumeSlider" oninput="volumeChange()"><span id="soundVolume"></span>
+         </div>
+         <div id="fps">
+        <input id="showFPS" type="checkbox"><span>Show FPS</span></div>
+        </div>
+    </div>
     <div id="gameoverdiv"><span id="gameover">Game Over</span><br>
         <div id="surviveTime"><span>You survived : </span><span id="timeSurvived"></span><br></div>
         <div id="options"><button id="reloadButton" onclick="start()">Restart</button></div></div>
@@ -23,12 +43,16 @@
     <div id="timerDiv"><span id="timemin">00</span><span>:</span><span id="timesec">00</span></div>
     <div id="specials"><div id="dashimg"><img src="dash.png"><div id="dashTimer"></div><div id="dashTimerText"></div></div>
     <div id="specialimg"><img src="special.png"><div id="specialTimer"></div><div id="specialTimerText"></div></div></div>
-    
+    <div id="fpsCount"></div>
+ <audio id="pageVolume">
     <audio id="shot">
             <source src="sounds/shot.wav">
     </audio>
     <audio id="playerhit">
         <source src="sounds/playerhit.wav">
+    </audio>
+    <audio id="reloaded">
+        <source src="sounds/loaded2.wav">
     </audio>
     <audio id="startGame">
         <source src="sounds/start.wav">
@@ -51,6 +75,9 @@
     <audio id="special">
        <source src="sounds/special.wav">
     </audio>
+    <audio id="reloadingSound">
+       <source src="sounds/reloading.wav">
+    </audio>
     <audio id="empty">
        <source src="sounds/empty.wav">
     </audio>
@@ -60,6 +87,7 @@
     <audio id="menu">
         <source src="sounds/menu.wav">
     </audio>
+</audio> 
     <script src="code.js"></script>
 </body>
 </html>
