@@ -6,6 +6,8 @@ canvas.height = screen.height
 document.querySelector(':root').style.setProperty('--width',canvas.width)
 document.querySelector(':root').style.setProperty('--height',canvas.height)
 var GamePaused = false
+var GameEnded = false
+var Playing = false
 const players = []
 const enemies = []
 const obstacles = []
@@ -39,16 +41,53 @@ var obstacleImg = new Image()
 obstacleImg.src = 'obstacle.png'
 var enemyimg = new Image()
 enemyimg.src = 'enemy.png'
-setInterval(()=>{
-  if(!GamePaused){
-  time.sec += 1
-  if (time.sec >= 60){
-    time.min += 1
-    time.sec = 0
-  }
-  document.getElementById('timesec').innerHTML = String(time.sec).padStart(2, '0')
-  document.getElementById('timemin').innerHTML = String(time.min).padStart(2, '0')}
-},1000)
+function start(){
+  document.getElementById('startGame').play()
+  Playing = true
+  document.getElementById('timesec').innerHTML = '00'
+  document.getElementById('timemin').innerHTML = '00'
+  var timeInterval = setInterval(()=>{
+    if(!GameEnded){
+    if(!GamePaused && Playing){
+    time.sec += 1
+    if (time.sec >= 60){
+      time.min += 1
+      time.sec = 0
+    }
+    document.getElementById('timesec').innerHTML = String(time.sec).padStart(2, '0')
+    document.getElementById('timemin').innerHTML = String(time.min).padStart(2, '0')
+    document.getElementById('timeSurvived').innerHTML =String(time.min).padStart(2, '0')+':'+String(time.sec).padStart(2, '0')}}
+    else{clearInterval(timeInterval)}
+  },1000)
+  players.length = 0
+  bullets.length = 0
+  enemies.length = 0
+  obstacles.length = 0
+  enemyMax = 4
+  time.sec = 0
+  time.min = 0
+  players.push(new Player(ctx))
+  GameEnded = false
+  document.getElementById('gameoverdiv').style.display = 'none'
+  var i = 5
+  var interval = setInterval(()=>{
+  if (i > 0){
+    i--
+  document.querySelector(':root').style.setProperty('--pauseBlur',i+'px')}
+  else {clearInterval(interval)}})
+  obstacles.push(new Obstacle(ctx,{width:200,height:200},{x:400,y:200}))
+  obstacles.push(new Obstacle(ctx,{width:200,height:200},{x:1000,y:200}))
+  obstacles.push(new Obstacle(ctx,{width:200,height:200},{x:700,y:1000}))
+  obstacles.push(new Obstacle(ctx,{width:50,height:50},{x:500,y:600}))
+  document.getElementById('startmenu').style.display = 'none'
+  document.getElementById('hpbar').style.display = 'block'
+  document.getElementById('magDiv').style.display = 'block'
+  document.getElementById('specials').style.display = 'block'
+  document.getElementById('timerDiv').style.display = 'block'
+  document.getElementById('HealthDiv').style.display = 'block'
+  document.getElementById('hpbarFiller').style.display = 'block'
+  Gameloop()
+}
 class Player{
   constructor(ctx){
     this.ctx = ctx
@@ -80,9 +119,11 @@ class Player{
     }
     this.firerate = 200
     this.special = {bool:true,reloadTime:0}
-    setInterval(()=>{
-      if((this.velocity.x != 0 || this.velocity.y!=0 )&& !GamePaused){
+    var interval = setInterval(()=>{
+      if((this.velocity.x != 0 || this.velocity.y!=0 ) && !GamePaused){
+         if(!GameEnded){
       document.getElementById('step1').play()}
+    else (clearInterval(interval))}
     },200)
   }
   init(){
@@ -155,7 +196,7 @@ class Player{
       this.dash.reloadTime = 5
       var interval = setInterval(()=>{
           if (Math.round(this.dash.reloadTime)>0 ){
-            if(!GamePaused){
+            if(!GamePaused && !GameEnded){
                this.dash.reloadTime -= 0.1}
           }
           else {clearInterval(interval);}
@@ -204,28 +245,30 @@ class Player{
     this.special.reloadTime = 10
     var interval = setInterval(()=>{
       if (Math.round(this.special.reloadTime) > 0){
-        if(!GamePaused){
+        if(!GamePaused && !GameEnded){
         this.special.reloadTime -= 0.1
-        
-        document.getElementById("specialTimerText").innerHTML = Math.round(this.special.reloadTime);
-        document.querySelector(':root').style.setProperty('--specialTime',Math.round(this.special.reloadTime*100)/100*4+'px')}
+        }
       }
-      else {clearInterval(interval);document.getElementById('specialTimerText').innerHTML = ''
-        document.querySelector(':root').style.setProperty('--specialTime',0)}
+      else {clearInterval(interval);}
       
     },100)
     setTimeout(()=>{
       this.special.bool = true
     },10000)
   }
-  
+  if (Math.round(this.special.reloadTime)>0 && Playing){
+    document.getElementById("specialTimerText").innerHTML = Math.round(this.special.reloadTime);
+    document.querySelector(':root').style.setProperty('--specialTime',Math.round(this.special.reloadTime*100)/100*4+'px')
+  }
+  else{document.getElementById('specialTimerText').innerHTML = ''
+  document.querySelector(':root').style.setProperty('--specialTime',0)}
 
     if ((keys.R.pressed || this.mag.bullet <= 0) && this.mag.bullet < 10 && !this.mag.reloading && Math.round(this.mag.reloadTime*100)/100 == 0){
       this.mag.reloading = true
       this.mag.reloadTime = 1.5
       keys.R.pressed = false
       var interval = setInterval(()=>{
-              if (!GamePaused){
+              if (!GamePaused && !GameEnded){
               document.getElementById('reloading').innerHTML = Math.round(this.mag.reloadTime*100)/100
               this.mag.reloadTime -= 0.1
               if (Math.round(this.mag.reloadTime*100)/100 <= 0){
@@ -410,13 +453,13 @@ obstacles.push(new Obstacle(ctx,{width:200,height:200},{x:1000,y:200}))
 obstacles.push(new Obstacle(ctx,{width:200,height:200},{x:700,y:1000}))
 obstacles.push(new Obstacle(ctx,{width:50,height:50},{x:500,y:600}))
 setInterval(()=>{
- if (enemies.length < enemyMax && !GamePaused){
+ if (enemies.length < enemyMax && !GamePaused && !GameEnded){
   if (Math.random() > 0.5){
   enemies.push(new Enemy(ctx,{x:Math.random()<0.5?-10:canvas.width+worldBorder.maxX,y:Math.random()*canvas.height+worldBorder.maxY}))}
   else {enemies.push(new Enemy(ctx,{x:Math.random()*canvas.width+worldBorder.maxX,y:Math.random()<0.5?canvas.height+worldBorder.maxY:-10}))}
 }},1000)
 setInterval(()=>{
-  if (!GamePaused){
+  if (!GamePaused && !GameEnded){
    enemyMax++}
 },10000)
 function timer(enemy){
@@ -558,7 +601,7 @@ function Gameloop(){
                   player.invisiblity.bool = false
                 },2000)
                 var interval = setInterval(()=>{
-                if(!GamePaused){
+                if(!GamePaused && !GameEnded){
                   if(player.invisiblity.bool){
                   player.invisiblity.blink = !player.invisiblity.blink}
                   else {clearInterval(interval),player.invisiblity.blink = false}}
@@ -573,7 +616,7 @@ function Gameloop(){
                   for (var i=0;i<8;i++){
                 particles.push(new Particle(ctx,{x:player.position.x,y:player.position.y},{x:(Math.random()-0.5)*3,y:(Math.random()-0.5)*3}))
                 }
-                setTimeout(()=>{alert('You Died lmao');location.reload()},2000)          
+                setTimeout(()=>{GameEnded = true},2000)          
                 }
             }
 
@@ -609,11 +652,17 @@ function Gameloop(){
       startTime = performance.now();
     }
     ctx.restore()
-    if (!GamePaused){
+    if (!GamePaused && !GameEnded){
     requestAnimationFrame(Gameloop)}
-}
-
- Gameloop()
+    if (GameEnded){
+      var i = 0
+      var interval = setInterval(()=>{
+      document.getElementById('menu').play()
+      if (i < 5){
+        i++
+      document.querySelector(':root').style.setProperty('--pauseBlur',i+'px')}
+      else {clearInterval(interval);document.getElementById('gameoverdiv').style.display = 'block';}},10)}
+    }
 
 addEventListener('keydown',({keyCode})=>{
     if (keyCode == 87) // W
@@ -634,6 +683,7 @@ addEventListener('keydown',({keyCode})=>{
     {keys.space.pressed = true}
     if (keyCode == 27) // Escape
     {if (!GamePaused){
+    if(!GameEnded && players.length > 0){
       GamePaused = true
       var i = 0
       var interval = setInterval(()=>{
@@ -641,7 +691,7 @@ addEventListener('keydown',({keyCode})=>{
       if (i < 5){
         i++
       document.querySelector(':root').style.setProperty('--pauseBlur',i+'px')}
-      else {clearInterval(interval);document.getElementById('pauseMenu').style.display = 'block';}},10)
+      else {clearInterval(interval);document.getElementById('pauseMenu').style.display = 'block';}},10)}
     }
   else {GamePaused=false;Gameloop();
 ;var i = 5
@@ -673,8 +723,9 @@ addEventListener('keyup',({keyCode})=>{
     {keys.space.pressed = false}  
 })
 addEventListener('mousemove',(event)=>{
-    players[0].event = event
-  })
+  players.forEach((player)=>{
+      player.event = event
+  })})
 addEventListener('mousedown',(event)=>{
   if (event.button == 0){
   keys.mouse1.pressed = true}

@@ -9,7 +9,12 @@
 </head>
 <body>
     <canvas id='canvas'></canvas>
+    <div id="startmenu"><span id="title">Title screen</span><br>
+        <button id="start" onclick="start()">Start</button></div>
     <div id="pauseMenu"><p id="pause">Pause</p></div>
+    <div id="gameoverdiv"><span id="gameover">Game Over</span><br>
+        <div id="surviveTime"><span>You survived : </span><span id="timeSurvived"></span><br></div>
+        <div id="options"><button id="reloadButton" onclick="start()">Restart</button></div></div>
     <div id="magDiv"><span id="mag">10</span><span id="mag2"> / 10</span>
     <div id="reloading"></div></div>
     <div id="HealthDiv"><span>+ </span><span id="health">20</span></div>
@@ -24,6 +29,9 @@
     </audio>
     <audio id="playerhit">
         <source src="sounds/playerhit.wav">
+    </audio>
+    <audio id="startGame">
+        <source src="sounds/start.wav">
     </audio>
     <audio id="bullethit">
         <source src="sounds/bullethit.wav">
